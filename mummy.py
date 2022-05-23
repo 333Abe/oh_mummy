@@ -1,11 +1,12 @@
 import pygame
-from settings import Settings
+from pygame.sprite import Sprite
 import random
 
-class Mummy:
+class Mummy(Sprite):
     '''a class to create an enemy mummy'''
-    def __init__(self, om_game):
+    def __init__(self, om_game, x, y):
         '''initialise the mummy and set his starting position'''
+        super().__init__()
         self.screen = om_game.screen
         self.screen_rect = om_game.screen.get_rect()
         self.settings = om_game.settings
@@ -29,9 +30,9 @@ class Mummy:
 
         # load the mummy image and set its starting position (rect)
         self.image = pygame.image.load("images/om_mummy.bmp")
-        self.rect = self.image.get_rect(midtop=(self.settings.mummy_start_x, self.settings.mummy_start_y))
 
         # start mummmy in the centre bottom of the maze
+        self.rect = self.image.get_rect(midtop=(x, y))
         self.start_mummy()
         self.draw()
 

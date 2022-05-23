@@ -26,32 +26,26 @@ class OhMummy:
         self.border_tiles = pygame.sprite.Group()
         self.path_tiles = pygame.sprite.Group()
         self.visited_path_tiles = pygame.sprite.Group()
-        self._populate_from_map()
+        self._populate_from_map("map/1100x900_border.txt")
+        self._populate_from_map("map/1100x900_tiles.txt")
         self.man = Man(self)
-        self.mummy = Mummy(self)
+        self.man_lives = self.settings.man_lives
+        self.man_start_x = self.settings.start_x
+        self.man_start_y = self.settings.start_y
+        self.mummies = pygame.sprite.Group()
+        self.number_of_mummies = self.settings.number_of_mummies
+        self.mummy_start_x = self.settings.mummy_start_x
+        self.mummy_start_y = self.settings.mummy_start_y
+        self._create_mummies(self.mummy_start_x, self.mummy_start_y)
 
-    def _populate_from_map(self):
+
+    def _create_mummies(self, x, y):
+        for mummy in range(self.number_of_mummies):
+            self.mummy = Mummy(self, x, y)
+            self.mummies.add(self.mummy)
+
+    def _populate_from_map(self, map_file):
         '''create the border and path tiles'''
-        map_file = "map/1100x900_border.txt"
-        with open(map_file) as file_object:
-            lines = file_object.readlines()
-        y = -25
-        offset = 25
-        for line in lines:
-            x = 0
-            y += 25
-            for char in line:
-                if char == "1":
-                    self.border_tile = BorderTile(self, x, y)
-                    self.border_tiles.add(self.border_tile)
-                elif char == "2":
-                    self.path_tile = PathTile(self, x, y)
-                    self.path_tiles.add(self.path_tile)
-                elif char == "3":
-                    self.tomb_tile = TombTile(self, x, y)
-                    self.tomb_tiles.add(self.tomb_tile)
-                x += offset
-        map_file = "map/1100x900_tiles.txt"
         with open(map_file) as file_object:
             lines = file_object.readlines()
         y = -25
@@ -76,7 +70,9 @@ class OhMummy:
         while True:
             self._manage_events()
             self.man.update()
-            self.mummy.update_mummy()
+            for mummy in self.mummies:
+                mummy.update_mummy()
+            self._mummy_attacks()
             self._reveal_path()
             self._redraw_screen()
 
@@ -104,7 +100,18 @@ class OhMummy:
                 if event.key == pygame.K_DOWN:
                     self.man.moving_down = False
 
+    def _mummy_attacks(self):
+        '''check for mummy collisions'''
+        mummy_man_collision = pygame.sprite.spritecollide(self.man, self.mummies, True)
+        for collison in mummy_man_collision:
+            self.man_lives -= 1
+            self._create_mummies(self.mummy_start_x, self.mummy_start_y)
+            self.man.rect.midtop = (self.man_start_x, self.man_start_y)
+            if self.man_lives <= 0:
+                sys.exit()
+
     def _reveal_path(self):
+        '''show path tiles which have been visited'''
         path_tile_collision = pygame.sprite.spritecollide(self.man, self.path_tiles, False, False)
         for path_tile in path_tile_collision:
             path_tile.image = pygame.image.load("images/path_dot.bmp")
@@ -114,6 +121,7 @@ class OhMummy:
 
 
     def _reveal_tomb_tiles(self):
+        '''reveal tomb tiles which have have been surrounded by revealed path tiles'''
         for tomb_tile in self.tomb_tiles:
             number_path_tiles = 0
             tomb_tile_reveal_collision = pygame.sprite.spritecollide(tomb_tile, self.visited_path_tiles, False, False)
@@ -132,7 +140,8 @@ class OhMummy:
         self.tomb_tiles.draw(self.screen)
         self.revealed_tomb_tiles.draw(self.screen)
         self.border_tiles.draw(self.screen)
-        self.mummy.draw()
+        for mummy in self.mummies:
+            mummy.draw()
         self.man.draw()
         # draw updated screen
         pygame.display.flip()

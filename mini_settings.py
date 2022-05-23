@@ -23,8 +23,9 @@ class Settings:
         self.start_y = 25
 
         # mummy settings
+        self.number_of_mummies = 1
         self.mummy_speed = 10
         self.mummy_start_x = 550
         self.mummy_start_y = 875
-        self.mummy_juction_direction_change = 0
-        self.mummy_turn_towards_man_chance = 11
+        self.mummy_juction_direction_change = 8
+        self.mummy_turn_towards_man_chance = 8
