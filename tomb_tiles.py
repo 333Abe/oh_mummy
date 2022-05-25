@@ -10,15 +10,14 @@ class Tile(Sprite):
 
 class TombTile(Tile):
     '''a class to create a tombtile'''
-    def __init__(self, om_game, x, y):
-        '''initialise a tile'''
+    def __init__(self, om_game, x, y, tomb_type):
+        '''initialise a tile and set its type'''
         super().__init__(om_game)
         self.image = pygame.image.load("images/tile_sand.bmp")
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        # starting coordinates = (75, 210)
-        # path between tiles = 50
+        self.tomb_type = tomb_type
 
 class BorderTile(Tile):
     '''class to create a border tile'''
@@ -39,3 +38,16 @@ class PathTile(Tile):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+class ExitTile(Tile):
+    '''class to create an exit tile'''
+    def __init__(self, om_game, x, y):
+        '''initialise an exit tile'''
+        super().__init__(om_game)
+        self.image = pygame.image.load("images/exit_1.bmp")
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def draw(self):
+        self.screen.blit(self.image, self.rect)

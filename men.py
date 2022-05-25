@@ -12,6 +12,7 @@ class Man:
         self.revealed_tomb_tiles = om_game.revealed_tomb_tiles
         self.border_tiles = om_game.border_tiles
         self.path_tiles = om_game.path_tiles
+        self.spawning_tile = om_game.spawning_tile
 
         # man movement flags
         self.moving_right = False
@@ -38,21 +39,25 @@ class Man:
             self._keep_within_border()
             self._check_tomb_tile_collision("right", self.tomb_tiles)
             self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
+            self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_left:
             self.rect.x -= self.settings.man_speed
             self._keep_within_border()
             self._check_tomb_tile_collision("left", self.tomb_tiles)
             self._check_tomb_tile_collision("left", self.revealed_tomb_tiles)
+            self._check_tomb_tile_collision("left", self.spawning_tile)
         if self.moving_up:
             self.rect.y -= self.settings.man_speed
             self._keep_within_border()
             self._check_tomb_tile_collision("up", self.tomb_tiles)
             self._check_tomb_tile_collision("up", self.revealed_tomb_tiles)
+            self._check_tomb_tile_collision("up", self.spawning_tile)
         if self.moving_down:
             self.rect.y += self.settings.man_speed
             self._keep_within_border()
             self._check_tomb_tile_collision("down", self.tomb_tiles)
             self._check_tomb_tile_collision("down", self.revealed_tomb_tiles)
+            self._check_tomb_tile_collision("down", self.spawning_tile)
 
     def _keep_within_border(self):
         if self.rect.right > self.border_right:
@@ -75,6 +80,10 @@ class Man:
                 self.rect.top = tomb_tile.rect.bottom
             if self.rect.bottom > tomb_tile.rect.top and direction == "down":
                 self.rect.bottom = tomb_tile.rect.top
+
+    def start_new_level(self):
+        self.rect = self.image.get_rect(midtop=(self.settings.start_x, self.settings.start_y))
+        self.draw()
 
     def draw(self):
         '''draw the man'''

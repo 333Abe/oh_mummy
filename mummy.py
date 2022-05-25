@@ -14,6 +14,7 @@ class Mummy(Sprite):
         self.revealed_tomb_tiles = om_game.revealed_tomb_tiles
         self.border_tiles = om_game.border_tiles
         self.path_tiles = om_game.path_tiles
+        self.spawning_tile = om_game.spawning_tile
         self.man = om_game.man
 
         # mummy movement flags
@@ -37,30 +38,36 @@ class Mummy(Sprite):
         self.draw()
 
     def start_mummy(self):
-        self._choose_random_direction()
+        initial_direction = random.randint(1, 2)
+        if initial_direction == 1:
+            self.moving_right = True
+        else:
+            self.moving_left = True
 
     def update_mummy(self):
-        junction = self._notice_junction()
-        if junction == True:
-            self._keep_straight()
-        self._move_mummy()
+        for speed in range(self.settings.mummy_speed):
+            junction = self._notice_junction()
+            if junction == True:
+                self._make_decision()
+            self._move_mummy()
 
-    def _keep_straight(self):
+    def _make_decision(self):
         while True:
-            # mummy keeps going straight most of the time
+            # mummy initially decides if they should go straight
             keep_straight = random.randint(1, 10)
             if keep_straight > self.settings.mummy_juction_direction_change:
+                #if its not keeping straight, should it chase the man, or choose a random direction?
                 turn_towards_man = random.randint(1, 10)
                 if turn_towards_man < self.settings.mummy_turn_towards_man_chance:
                     self._chase_man()
                 else:
                     self._choose_random_direction()
                             #move mummy
+            #check it's not moving into a border or tile
             hit_something = self._move_mummy_with_collision_detection()
-            #check nothing has been hit
+            #if nothing has been hit, break loop
             if hit_something == False:
                 break
-            #if nothing has been hit, break loop
         return
 
     def _chase_man(self):
@@ -139,36 +146,40 @@ class Mummy(Sprite):
 
     def _move_mummy(self):
         if self.moving_right:
-            self.rect.x += self.settings.mummy_speed
+            self.rect.x += 1
         if self.moving_left:
-            self.rect.x -= self.settings.mummy_speed
+            self.rect.x -= 1
         if self.moving_up:
-            self.rect.y -= self.settings.mummy_speed
+            self.rect.y -= 1
         if self.moving_down:
-            self.rect.y += self.settings.mummy_speed
+            self.rect.y += 1
 
     def _move_mummy_with_collision_detection(self):
         if self.moving_right:
-            self.rect.x += self.settings.mummy_speed
+            self.rect.x += 1
             hit_border = self._keep_within_border()
             hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
             hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
+            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_left:
-            self.rect.x -= self.settings.mummy_speed
+            self.rect.x -= 1
             hit_border = self._keep_within_border()
             hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
             hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
+            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_up:
-            self.rect.y -= self.settings.mummy_speed
+            self.rect.y -= 1
             hit_border = self._keep_within_border()
             hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
             hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
+            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_down:
-            self.rect.y += self.settings.mummy_speed
+            self.rect.y += 1
             hit_border = self._keep_within_border()
             hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
             hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
-        if hit_border == True or hit_tile1 == True or hit_tile2 == True:
+            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
+        if hit_border == True or hit_tile1 == True or hit_tile2 == True or hit_tile3 == True:
             return True
         return False
 
