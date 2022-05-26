@@ -158,28 +158,16 @@ class Mummy(Sprite):
         if self.moving_right:
             self.rect.x += 1
             hit_border = self._keep_within_border()
-            hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
-            hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
-            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_left:
             self.rect.x -= 1
             hit_border = self._keep_within_border()
-            hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
-            hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
-            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_up:
             self.rect.y -= 1
             hit_border = self._keep_within_border()
-            hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
-            hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
-            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
         if self.moving_down:
             self.rect.y += 1
             hit_border = self._keep_within_border()
-            hit_tile1 = self._check_tomb_tile_collision("right", self.tomb_tiles)
-            hit_tile2 = self._check_tomb_tile_collision("right", self.revealed_tomb_tiles)
-            hit_tile3 = self._check_tomb_tile_collision("right", self.spawning_tile)
-        if hit_border == True or hit_tile1 == True or hit_tile2 == True or hit_tile3 == True:
+        if hit_border == True:
             return True
         return False
 

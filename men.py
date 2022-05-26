@@ -31,7 +31,7 @@ class Man:
         self.rect = self.image.get_rect(midtop=(self.settings.start_x, self.settings.start_y))
 
         # start man in the centre top of the maze
-        self.draw()
+        self.draw(self.image)
 
     def update(self):
         if self.moving_right:
@@ -83,8 +83,8 @@ class Man:
 
     def start_new_level(self):
         self.rect = self.image.get_rect(midtop=(self.settings.start_x, self.settings.start_y))
-        self.draw()
+        self.draw(self.image)
 
-    def draw(self):
+    def draw(self, image):
         '''draw the man'''
-        self.screen.blit(self.image, self.rect)
+        self.screen.blit(image, self.rect)

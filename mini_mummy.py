@@ -30,6 +30,9 @@ class OhMummy:
         self.exit_activated = pygame.sprite.Group()
         self.spawning_tile = pygame.sprite.Group()
         self.mummies = pygame.sprite.Group()
+        self.mummy_spawn_flash_frequency = 0.3
+        self.mummy_spawn_time = 5
+        self.exit_flash_frequency = 0.1
         self.man = Man(self)
         self.man_start_x = self.settings.start_x
         self.man_start_y = self.settings.start_y
@@ -47,6 +50,7 @@ class OhMummy:
 
     def _set_up_new_level(self):
         self.mummy_spawning = False
+        self.mummy_spawn_flash_count = 0
         self.spawn_reveal_time = None
         self.scroll = False
         self.number_of_mummies += 1
@@ -67,6 +71,7 @@ class OhMummy:
         self._create_mummies(self.mummy_start_x, self.mummy_start_y)
         self.key = False
         self.sarcophagus = False
+        self.exit_flash_count = 0
         self.exit_tile = ExitTile(self, (random.randint(0, 5) * 200) + 25, (random.randint(0, 4) * 200) + 25)
 
     def _create_mummies(self, x, y):
@@ -138,9 +143,10 @@ class OhMummy:
         for collison in mummy_man_collision:
             if self.scroll == False:
                 self.man_lives -= 1
-                ##################################################### need to implement player death animation here
+                self._lose_a_life()
             else:
                 self.scroll = False
+                self.score += 50
             self.number_of_mummies -= 1
             if self.man_lives <= 0:
                 print(f"You scored {self.score}")
@@ -150,6 +156,7 @@ class OhMummy:
         '''check for man getting to the exit'''
         man_exit = pygame.sprite.spritecollide(self.man, self.exit_activated, True)
         if man_exit:
+            self.score += 100
             self._set_up_new_level()
 
     def _reveal_path(self):
@@ -180,15 +187,18 @@ class OhMummy:
                     self.key = True
                     if self.sarcophagus:
                         self.exit_activated.add(self.exit_tile)
+                        self.exit_opening_time = time.time()
                 elif tomb_tile.tomb_type == 4:
                     tomb_tile.image = pygame.image.load("images/sarcophagus.bmp")
                     self.sarcophagus = True
                     if self.key:
                         self.exit_activated.add(self.exit_tile)
+                        self.exit_opening_time = time.time()
                 elif tomb_tile.tomb_type == 5:
                     tomb_tile.image = pygame.image.load("images/mummy_2.bmp")
                     self.mummy_spawning = True
                     self.spawn_reveal_time = time.time()
+                    self.mummy_spawn_flash_count = 0
                 if tomb_tile.tomb_type == 5:
                     self.spawning_tile.add(tomb_tile)
                 else:
@@ -202,7 +212,7 @@ class OhMummy:
         elif spawn_position == 2:
             self.mummy = Mummy(self, tomb_tile.rect.x - 25 , tomb_tile.rect.y + 150)
         elif spawn_position == 3:
-            self.mummy = Mummy(self, tomb_tile.rect.x + 175, tomb_tile.rect.y + 200)
+            self.mummy = Mummy(self, tomb_tile.rect.x + 175, tomb_tile.rect.y + 150)
         else:
             self.mummy = Mummy(self, tomb_tile.rect.x + 200, tomb_tile.rect.y - 50)
         self.mummies.add(self.mummy)
@@ -211,6 +221,27 @@ class OhMummy:
         self.revealed_tomb_tiles.add(tomb_tile)
         self.spawning_tile.remove(tomb_tile)
         self.spawn_reveal_time = None
+
+    def _lose_a_life(self):
+        time_of_death = time.time()
+        man_flash_count = 0
+        while time.time() < time_of_death + 1:
+            if man_flash_count % 2 == 0:
+                image_file = pygame.image.load("images/dead_om_man.bmp")
+            else:
+                image_file = pygame.image.load("images/om_man.bmp")
+            if time.time() >= time_of_death + (0.1 * man_flash_count):
+                self.man.draw(image_file)
+                man_flash_count += 1
+                pygame.display.flip()
+
+    def _flash_tile(self, instance_time, frequency, count, tile, group, image_file):
+        if time.time() >= instance_time + (frequency * count):
+            for tile in group:
+                tile.image = pygame.image.load(image_file)
+            count += 1
+            return count
+        return count
 
     def _redraw_screen(self):
         # redraw the screen
@@ -221,29 +252,43 @@ class OhMummy:
         self.revealed_tomb_tiles.draw(self.screen)
         self.border_tiles.draw(self.screen)
         if self.mummy_spawning == True:
-            if time.time() >= self.spawn_reveal_time + 5:
+            if self.mummy_spawn_flash_count * self.mummy_spawn_flash_frequency >= self.mummy_spawn_time:
                 for tile in self.spawning_tile:
-                   tile.image = pygame.image.load("images/mummy_1.bmp")
-                   self.spawn_mummy_from_tomb(tile)
-            elif time.time() >= self.spawn_reveal_time + 4:
+                    tile.image = pygame.image.load("images/mummy_1.bmp")
+                    self.spawn_mummy_from_tomb(tile)
+                    self.mummy_spawn_flash_count = 0
+            else:
+                if self.mummy_spawn_flash_count % 2 == 0:
+                    image_file = "images/mummy_2.bmp"
+                else:
+                    image_file = "images/mummy_1.bmp"
                 for tile in self.spawning_tile:
-                   tile.image = pygame.image.load("images/mummy_2.bmp")
-            elif time.time() >= self.spawn_reveal_time + 3:
-                for tile in self.spawning_tile:
-                   tile.image = pygame.image.load("images/mummy_1.bmp")
-            elif time.time() >= self.spawn_reveal_time + 2:
-                for tile in self.spawning_tile:
-                   tile.image = pygame.image.load("images/mummy_2.bmp")
-            elif time.time() >= self.spawn_reveal_time + 1:
-                for tile in self.spawning_tile:
-                   tile.image = pygame.image.load("images/mummy_1.bmp")
+                    self.mummy_spawn_flash_count = self._flash_tile(
+                        self.spawn_reveal_time,
+                        self.mummy_spawn_flash_frequency,
+                        self.mummy_spawn_flash_count,
+                        tile,
+                        self.spawning_tile,
+                        image_file)
             if self.spawning_tile:
                 self.spawning_tile.draw(self.screen)
         for mummy in self.mummies:
             mummy.draw()
-        self.man.draw()
+        self.man.draw(self.man.image)
         if self.key and self.sarcophagus:
-            self.exit_tile.draw()
+            if self.exit_flash_count % 2 == 0:
+                image_file = "images/exit_2.bmp"
+            else:
+                image_file = "images/exit_1.bmp"
+            for tile in self.exit_activated:
+                self.exit_flash_count = self._flash_tile(
+                    self.exit_opening_time,
+                    self.exit_flash_frequency,
+                    self.exit_flash_count,
+                    tile,
+                    self.exit_activated,
+                    image_file)
+            self.exit_activated.draw(self.screen)
         # draw updated screen
         pygame.display.flip()
 
