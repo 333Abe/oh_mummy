@@ -29,14 +29,6 @@ class Mummy(Sprite):
         self.border_top = self.settings.border_top
         self.border_bottom = self.settings.border_bottom
 
-        # load the mummy image and set its starting position (rect)
-        self.image = pygame.image.load("images/om_mummy.bmp")
-
-        # start mummmy in the centre bottom of the maze
-        self.rect = self.image.get_rect(midtop=(x, y))
-        self.start_mummy()
-        self.draw()
-
     def start_mummy(self):
         initial_direction = random.randint(1, 2)
         if initial_direction == 1:
@@ -45,7 +37,7 @@ class Mummy(Sprite):
             self.moving_left = True
 
     def update_mummy(self):
-        for speed in range(self.settings.mummy_speed):
+        for speed in range(self.mummy_speed):
             junction = self._notice_junction()
             if junction == True:
                 self._make_decision()
@@ -53,12 +45,12 @@ class Mummy(Sprite):
 
     def _make_decision(self):
         while True:
-            # mummy initially decides if they should go straight
+            # mummy initially decides if it should go straight
             keep_straight = random.randint(1, 10)
-            if keep_straight > self.settings.mummy_juction_direction_change:
+            if keep_straight < self.mummy_junction_direction_change:
                 #if its not keeping straight, should it chase the man, or choose a random direction?
                 turn_towards_man = random.randint(1, 10)
-                if turn_towards_man < self.settings.mummy_turn_towards_man_chance:
+                if turn_towards_man < self.mummy_turn_towards_man_chance:
                     self._chase_man()
                 else:
                     self._choose_random_direction()
@@ -208,3 +200,48 @@ class Mummy(Sprite):
     def draw(self):
         '''draw the mummy'''
         self.screen.blit(self.image, self.rect)
+
+class Ashayet(Mummy):
+    '''a mummy class for Ashayet'''
+    def __init__(self, om_game, x, y):
+        super().__init__(om_game, x, y)
+        # load the mummy image and set its starting position (rect)
+        self.image = pygame.image.load(self.settings.ashayet_image)
+        self.mummy_speed = self.settings.ashayet_speed
+        self.mummy_junction_direction_change = self.settings.ashayet_junction_direction_change
+        self.mummy_turn_towards_man_chance = self.settings.ashayet_turn_towards_man_chance
+
+        # start mummmy in the centre bottom of the maze
+        self.rect = self.image.get_rect(midtop=(x, y))
+        self.start_mummy()
+        self.draw()
+
+class Siptah(Mummy):
+    '''a mummy class for Siptah'''
+    def __init__(self, om_game, x, y):
+        super().__init__(om_game, x, y)
+        # load the mummy image and set its starting position (rect)
+        self.image = pygame.image.load(self.settings.siptah_image)
+        self.mummy_speed = self.settings.siptah_speed
+        self.mummy_junction_direction_change = self.settings.siptah_junction_direction_change
+        self.mummy_turn_towards_man_chance = self.settings.siptah_turn_towards_man_chance
+
+        # start mummmy in the centre bottom of the maze
+        self.rect = self.image.get_rect(midtop=(x, y))
+        self.start_mummy()
+        self.draw()
+
+class Pentaweret(Mummy):
+    '''a mummy class for Pentaweret'''
+    def __init__(self, om_game, x, y):
+        super().__init__(om_game, x, y)
+        # load the mummy image and set its starting position (rect)
+        self.image = pygame.image.load(self.settings.pentaweret_image)
+        self.mummy_speed = self.settings.pentaweret_speed
+        self.mummy_junction_direction_change = self.settings.pentaweret_junction_direction_change
+        self.mummy_turn_towards_man_chance = self.settings.pentaweret_turn_towards_man_chance
+
+        # start mummmy in the centre bottom of the maze
+        self.rect = self.image.get_rect(midtop=(x, y))
+        self.start_mummy()
+        self.draw()

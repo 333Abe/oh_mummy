@@ -6,7 +6,9 @@ import time
 from tomb_tiles import *
 from mini_settings import Settings
 from men import Man
-from mummy import Mummy
+from mummy import *
+from scoreboard import Scoreboard
+from stats import OM_Statistics
 
 class OhMummy:
     '''main class to manage gameplay and behaviour'''
@@ -22,6 +24,7 @@ class OhMummy:
         # set background colour to black
         self.bg_colour = (0, 0, 0)
 
+        # initialise sprite groups
         self.tomb_tiles = pygame.sprite.Group()
         self.revealed_tomb_tiles = pygame.sprite.Group()
         self.border_tiles = pygame.sprite.Group()
@@ -30,22 +33,26 @@ class OhMummy:
         self.exit_activated = pygame.sprite.Group()
         self.spawning_tile = pygame.sprite.Group()
         self.mummies = pygame.sprite.Group()
-        self.mummy_spawn_flash_frequency = 0.3
-        self.mummy_spawn_time = 5
-        self.exit_flash_frequency = 0.1
+
+        self.mummy_spawn_flash_frequency = self.settings.mummy_spawn_flash_frequency
+        self.mummy_spawn_time = self.settings.mummy_spawn_time
+        self.exit_flash_frequency = self.settings.exit_flash_frequency
         self.man = Man(self)
         self.man_start_x = self.settings.start_x
         self.man_start_y = self.settings.start_y
         self.mummy_start_x = self.settings.mummy_start_x
         self.mummy_start_y = self.settings.mummy_start_y
         self.open_tomb_rooms = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5]
+        self.scroll = False
+        self.stats = OM_Statistics(self)
+        self.scoreboard = Scoreboard(self)
         self._start_new_game()
 
     def _start_new_game(self):
-        self._populate_from_map("map/1100x900_border.txt")
-        self.man_lives = self.settings.man_lives
-        self.number_of_mummies = 0
-        self.score = 0
+        self._populate_from_map("map/game_border.txt")
+        for mummy in self.mummies:
+            self.mummies.remove(mummy)
+        self.stats.new_game_reset_stats()
         self._set_up_new_level()
 
     def _set_up_new_level(self):
@@ -53,9 +60,23 @@ class OhMummy:
         self.mummy_spawn_flash_count = 0
         self.spawn_reveal_time = None
         self.scroll = False
-        self.number_of_mummies += 1
+        self.scoreboard.prep_scroll("images/tile_sand.bmp")
+
+        # add new mummy to level
+        self.mummy = self._choose_mummy(self.mummy_start_x, self.mummy_start_y)
+        self.mummies.add(self.mummy)
+
+        # spawn all mummies
         for mummy in self.mummies:
-            self.mummies.remove(mummy)
+            # move mummy to centre-bottom of play area
+            mummy.rect = mummy.image.get_rect(midtop=(self.mummy_start_x, self.mummy_start_y))
+            # ensure they're travelling either left or right and not up or down
+            mummy.moving_right = False
+            mummy.moving_left = False
+            mummy.moving_up = False
+            mummy.moving_down = False
+            mummy.start_mummy()
+
         for tile in self.revealed_tomb_tiles:
             self.revealed_tomb_tiles.remove(tile)
         for tile in self.tomb_tiles:
@@ -66,18 +87,14 @@ class OhMummy:
             self.path_tiles.remove(tile)
         for tile in self.spawning_tile:
             self.spawning_tile.remove(tile)
-        self._populate_from_map("map/1100x900_tiles.txt")
+        self._populate_from_map("map/game_tiles.txt")
         self.man.start_new_level()
-        self._create_mummies(self.mummy_start_x, self.mummy_start_y)
         self.key = False
         self.sarcophagus = False
+        self.scoreboard.prep_key("images/tile_sand.bmp")
+        self.scoreboard.prep_sarcophagus("images/tile_sand.bmp")
         self.exit_flash_count = 0
         self.exit_tile = ExitTile(self, (random.randint(0, 5) * 200) + 25, (random.randint(0, 4) * 200) + 25)
-
-    def _create_mummies(self, x, y):
-        for mummy in range(self.number_of_mummies):
-            self.mummy = Mummy(self, x, y)
-            self.mummies.add(self.mummy)
 
     def _populate_from_map(self, map_file):
         '''create the border and path tiles'''
@@ -100,6 +117,16 @@ class OhMummy:
                     self.tomb_tile = TombTile(self, x, y, shuffled_tombs.pop())
                     self.tomb_tiles.add(self.tomb_tile)
                 x += offset
+
+    def _choose_mummy(self, x, y):
+        mummy_choice = random.randint(1, 3)
+        if mummy_choice == 1:
+            mummy = Ashayet(self, x, y)
+        elif mummy_choice == 2:
+            mummy = Siptah(self, x, y)
+        else:
+            mummy = Pentaweret(self, x, y)
+        return mummy
 
     def run_game(self):
         '''start the main game loop'''
@@ -142,21 +169,23 @@ class OhMummy:
         mummy_man_collision = pygame.sprite.spritecollide(self.man, self.mummies, True)
         for collison in mummy_man_collision:
             if self.scroll == False:
-                self.man_lives -= 1
+                self.stats.man_lives -= 1
+                self.scoreboard.prep_lives()
                 self._lose_a_life()
             else:
                 self.scroll = False
-                self.score += 50
-            self.number_of_mummies -= 1
-            if self.man_lives <= 0:
-                print(f"You scored {self.score}")
+                self.scoreboard.prep_scroll("images/tile_sand.bmp")
+                self.stats.score += self.settings.used_scroll
+                self.scoreboard.prep_score()
+            if self.stats.man_lives <= 0:
                 sys.exit()
 
     def _exit_level(self):
         '''check for man getting to the exit'''
         man_exit = pygame.sprite.spritecollide(self.man, self.exit_activated, True)
         if man_exit:
-            self.score += 100
+            self.stats.score += self.settings.finished_level
+            self.scoreboard.prep_score()
             self._set_up_new_level()
 
     def _reveal_path(self):
@@ -178,19 +207,23 @@ class OhMummy:
             if number_path_tiles == 8:
                 if tomb_tile.tomb_type == 1:
                     tomb_tile.image = pygame.image.load("images/treasure.bmp")
-                    self.score += 10
+                    self.stats.score += self.settings.found_treasure
+                    self.scoreboard.prep_score()
                 elif tomb_tile.tomb_type == 2:
                     tomb_tile.image = pygame.image.load("images/scroll.bmp")
                     self.scroll = True
+                    self.scoreboard.prep_scroll("images/scroll.bmp")
                 elif tomb_tile.tomb_type == 3:
                     tomb_tile.image = pygame.image.load("images/key.bmp")
                     self.key = True
+                    self.scoreboard.prep_key("images/key.bmp")
                     if self.sarcophagus:
                         self.exit_activated.add(self.exit_tile)
                         self.exit_opening_time = time.time()
                 elif tomb_tile.tomb_type == 4:
                     tomb_tile.image = pygame.image.load("images/sarcophagus.bmp")
                     self.sarcophagus = True
+                    self.scoreboard.prep_sarcophagus("images/sarcophagus.bmp")
                     if self.key:
                         self.exit_activated.add(self.exit_tile)
                         self.exit_opening_time = time.time()
@@ -208,15 +241,14 @@ class OhMummy:
     def spawn_mummy_from_tomb(self, tomb_tile):
         spawn_position = random.randint(1, 4)
         if spawn_position == 1:
-            self.mummy = Mummy(self, tomb_tile.rect.x - 25, tomb_tile.rect.y - 50)
+            self.mummy = self._choose_mummy(tomb_tile.rect.x - 25, tomb_tile.rect.y - 50)
         elif spawn_position == 2:
-            self.mummy = Mummy(self, tomb_tile.rect.x - 25 , tomb_tile.rect.y + 150)
+            self.mummy = self._choose_mummy(tomb_tile.rect.x - 25 , tomb_tile.rect.y + 150)
         elif spawn_position == 3:
-            self.mummy = Mummy(self, tomb_tile.rect.x + 175, tomb_tile.rect.y + 150)
+            self.mummy = self._choose_mummy(tomb_tile.rect.x + 175, tomb_tile.rect.y + 150)
         else:
-            self.mummy = Mummy(self, tomb_tile.rect.x + 200, tomb_tile.rect.y - 50)
+            self.mummy = self._choose_mummy(tomb_tile.rect.x + 200, tomb_tile.rect.y - 50)
         self.mummies.add(self.mummy)
-        self.number_of_mummies += 1
         self.mummy_spawning = False
         self.revealed_tomb_tiles.add(tomb_tile)
         self.spawning_tile.remove(tomb_tile)
@@ -289,6 +321,7 @@ class OhMummy:
                     self.exit_activated,
                     image_file)
             self.exit_activated.draw(self.screen)
+        self.scoreboard.show_score()
         # draw updated screen
         pygame.display.flip()
 
