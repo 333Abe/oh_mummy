@@ -56,9 +56,9 @@ class OhMummy:
         for mummy in self.mummies:
             self.mummies.remove(mummy)
         self.stats.new_game_reset_stats()
+        self._start_new_tomb()
 
     def _start_new_tomb(self):
-
         self._set_up_new_level()
 
     def _set_up_new_level(self):
