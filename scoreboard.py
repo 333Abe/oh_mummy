@@ -14,13 +14,16 @@ class Scoreboard:
         # font settings
         self.text_colour = (255, 255, 255)
         self.font = pygame.font.SysFont(None, 48)
+        self.small_font = pygame.font.SysFont(None, 12)
 
         # prepare the initial state for the score, lives and collected tiles
         self.prep_score()
+        self.prep_level()
         self.prep_lives()
         self.prep_scroll("images/tile_sand.bmp")
         self.prep_key("images/tile_sand.bmp")
         self.prep_sarcophagus("images/tile_sand.bmp")
+        self.prep_fps(0)
 
     def prep_score(self):
         '''turn the score into a rendered image'''
@@ -31,6 +34,24 @@ class Scoreboard:
         self.score_rect = self.score_image.get_rect()
         self.score_rect.right = self.screen_rect.right - 45
         self.score_rect.top = 50
+
+    def prep_level(self):
+        level_string = "Room: " + str(self.stats.level)
+        self.level_image = self.font.render(level_string, True, self.text_colour, self.settings.bg_colour)
+
+        self.level_rect = self.level_image.get_rect()
+        self.level_rect.right = self.screen_rect.right - 45
+        self.level_rect.top = self.score_rect.bottom + 25
+
+    def prep_fps(self, fps):
+        '''show fps'''
+        fps_string = "FPS: " + str(fps)
+        self.fps_image = self.small_font.render(fps_string, True, self.text_colour, self.settings.bg_colour)
+
+        # display the frame rate in the info pane on the right
+        self.fps_rect = self.fps_image.get_rect()
+        self.fps_rect.right = self.screen_rect.right - 45
+        self.fps_rect.bottom = self.screen_rect.bottom - 30
 
     def prep_lives(self):
         '''show how many lives are left next to an image of the man'''
@@ -69,8 +90,10 @@ class Scoreboard:
     def show_score(self):
         '''draw the score to the screen'''
         self.screen.blit(self.score_image, self.score_rect)
+        self.screen.blit(self.level_image, self.level_rect)
         self.screen.blit(self.man_image, self.man_image_rect)
         self.screen.blit(self.lives_image, self.lives_rect)
         self.screen.blit(self.scroll_image, self.scroll_rect)
         self.screen.blit(self.key_image, self.key_rect)
         self.screen.blit(self.sarcophagus_image, self.sarcophagus_rect)
+        self.screen.blit(self.fps_image, self.fps_rect)

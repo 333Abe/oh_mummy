@@ -24,6 +24,9 @@ class OhMummy:
         # set background colour to black
         self.bg_colour = (0, 0, 0)
 
+        #initalise clock
+        self.clock = pygame.time.Clock()
+
         # initialise sprite groups
         self.tomb_tiles = pygame.sprite.Group()
         self.revealed_tomb_tiles = pygame.sprite.Group()
@@ -53,6 +56,9 @@ class OhMummy:
         for mummy in self.mummies:
             self.mummies.remove(mummy)
         self.stats.new_game_reset_stats()
+
+    def _start_new_tomb(self):
+
         self._set_up_new_level()
 
     def _set_up_new_level(self):
@@ -139,6 +145,8 @@ class OhMummy:
             self._reveal_path()
             self._exit_level()
             self._redraw_screen()
+            self.clock.tick(40)
+            self.scoreboard.prep_fps(round(self.clock.get_fps(), 1))
 
     def _manage_events(self):
         # manage keyboard and mouse events
@@ -185,6 +193,8 @@ class OhMummy:
         man_exit = pygame.sprite.spritecollide(self.man, self.exit_activated, True)
         if man_exit:
             self.stats.score += self.settings.finished_level
+            self.stats.level += 1
+            self.scoreboard.prep_level()
             self.scoreboard.prep_score()
             self._set_up_new_level()
 
