@@ -70,7 +70,7 @@ class Man:
             self.rect.bottom = self.border_bottom
 
     def _check_tomb_tile_collision(self, direction, group):
-        tomb_tile_collision = pygame.sprite.spritecollide(self, group, False, False)
+        tomb_tile_collision = pygame.sprite.spritecollide(self, group, False)
         for tomb_tile in tomb_tile_collision:
             if self.rect.right > tomb_tile.rect.left and direction == "right":
                 self.rect.right = tomb_tile.rect.left

@@ -152,6 +152,7 @@ class OhMummy:
         # manage keyboard and mouse events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print(event, "<<<<<<<<<<<<<<< event")
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_l:
@@ -200,7 +201,7 @@ class OhMummy:
 
     def _reveal_path(self):
         '''show path tiles which have been visited'''
-        path_tile_collision = pygame.sprite.spritecollide(self.man, self.path_tiles, False, False)
+        path_tile_collision = pygame.sprite.spritecollide(self.man, self.path_tiles, False)
         for path_tile in path_tile_collision:
             path_tile.image = pygame.image.load("images/path_dot.bmp")
             self.visited_path_tiles.add(path_tile)
@@ -211,7 +212,7 @@ class OhMummy:
         '''reveal tomb tiles which have have been surrounded by revealed path tiles'''
         for tomb_tile in self.tomb_tiles:
             number_path_tiles = 0
-            tomb_tile_reveal_collision = pygame.sprite.spritecollide(tomb_tile, self.visited_path_tiles, False, False)
+            tomb_tile_reveal_collision = pygame.sprite.spritecollide(tomb_tile, self.visited_path_tiles, False)
             for visited_path_tile in tomb_tile_reveal_collision:
                 number_path_tiles += 1
             if number_path_tiles == 8:
