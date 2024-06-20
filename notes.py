@@ -49,7 +49,7 @@ add highscore tables
 add survival mode - tomb size is infinite, highest level counts for highscore table, score breaks ties
 
 
-refactor the codebase lol
+refactor the codebase
 
 
 ##############################
